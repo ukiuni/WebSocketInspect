@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>chat</title>
+<script type="text/javascript">
+	var webSocket;
+	window.onload = function() {
+		var forRtoA = document.createElement('a');
+		forRtoA.href = "loadMessage";
+		webSocket = new WebSocket(forRtoA.href.replace("http://", "ws://").replace("https://", "wss://"));
+		var messageArea = document.getElementById("messageArea");
+		var appendMessage = function(value, color) {
+			var messageElement = document.createElement("div");
+			messageElement.style.color = color;
+			messageElement.innerText = value;
+			messageArea.insertBefore(messageElement, messageArea.firstChild);
+		}
+
+		webSocket.onopen = function() {
+			appendMessage("Opened", "blue");
+		}
+		webSocket.onclose = function() {
+			appendMessage("Closed", "red");
+		}
+		webSocket.onmessage = function(message) {
+			var data = JSON.parse(message.data);
+			if ("message" == data.command) {
+				appendMessage(data.text, "black");
+			} else if ("error" == data.command) {
+				appendMessage(data.text, "red");
+			}
+		}
+		webSocket.onerror = function(message) {
+			appendMessage(message, "red");
+		}
+		var messageInput = document.getElementById("messageInput");
+		messageInput.onkeypress = function(e) {
+			if (13 == e.keyCode) {
+				var message = messageInput.value;
+				if (webSocket && "" != message) {
+					webSocket.send(message);
+					messageInput.value = "";
+				}
+			}
+		}
+	}
+</script>
+</head>
+<body>
+	<div>
+		<input type="text" width="90%" id="messageInput" />
+	</div>
+	<div id="messageArea"></div>
+	<div></div>
+</body>
+</html>
